@@ -1,9 +1,9 @@
-name: Android APK (zip)
+name: Android APK
 
 on:
-  workflow_dispatch:
   push:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,24 +18,13 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
-      - name: Zip'i ac
-        run: |
-          ZIP=$(ls *.zip | head -1)
-          mkdir proje
-          unzip -q "$ZIP" -d proje
-          # zip icinde tek ust klasor varsa icine gir
-          if [ ! -f proje/gradlew ]; then
-            cd proje/*/ && cp -r . ../../proje_duz && cd ../..
-            rm -rf proje && mv proje_duz proje
-          fi
+      - name: Gradle wrapper izni
+        run: chmod +x gradlew
 
-      - name: Derle
-        working-directory: proje
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Debug APK derle
+        run: ./gradlew assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
           name: zekametre-debug-apk
-          path: proje/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
