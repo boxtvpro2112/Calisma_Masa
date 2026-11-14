@@ -1,0 +1,41 @@
+name: Android APK (zip)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Zip'i ac
+        run: |
+          ZIP=$(ls *.zip | head -1)
+          mkdir proje
+          unzip -q "$ZIP" -d proje
+          # zip icinde tek ust klasor varsa icine gir
+          if [ ! -f proje/gradlew ]; then
+            cd proje/*/ && cp -r . ../../proje_duz && cd ../..
+            rm -rf proje && mv proje_duz proje
+          fi
+
+      - name: Derle
+        working-directory: proje
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zekametre-debug-apk
+          path: proje/app/build/outputs/apk/debug/app-debug.apk
