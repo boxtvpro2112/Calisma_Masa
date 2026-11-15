@@ -1,8 +1,6 @@
-name: Android APK
+name: Android APK (zip)
 
 on:
-  push:
-    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -16,15 +14,23 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      - name: Zip'i ac
+        run: |
+          ZIP=$(ls *.zip | head -1)
+          mkdir proje
+          unzip -q "$ZIP" -d proje
+          if [ ! -f proje/gradlew ]; then
+            mv proje/*/* proje/ || true
+            mv proje/*/.[!.]* proje/ 2>/dev/null || true
+          fi
 
-      - name: Gradle wrapper izni
-        run: chmod +x gradlew
-
-      - name: Debug APK derle
-        run: ./gradlew assembleDebug
+      - name: Derle
+        working-directory: proje
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
           name: zekametre-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: proje/app/build/outputs/apk/debug/app-debug.apk
